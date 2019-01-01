@@ -83,7 +83,7 @@ typedef bool (*elementGreaterThan)(Element e1, Element e2);
 * 	NULL - if one of the parameters is NULL or allocations failed.
 * 	A new List in case of success.
 */
-UniqueOrderedList uniqueOrderedListCreate(copyElements, freeElements, elementsEquals, elementGreaterThan);
+UniqueOrderedList uniqueOrderedListCreate(copyElements copyFunc, freeElements freeFunc, elementsEquals equalsFunc, elementGreaterThan greaterFunc);
 
 /**
 * Deallocates an existing list. Clears all elements by using the

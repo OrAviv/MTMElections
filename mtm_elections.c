@@ -28,7 +28,7 @@ typedef int (*RankFunc)(MtmElections, int, void*);
 //
 //MtmElectionsResult MtmElectionsCitizenGetCity(MtmElections mtmElections, int citizenId, int* cityId);
 //
-//MtmElectionsResult MtmElectionsCitizenGetAge(MtmElections mtmElections, int citizenId, int* age);
+//MtmElectionsResult MtmElectionsCitizenGetAge(MtmElections mtmElections, int citizenI d, int* age);
 //
 //MtmElectionsResult MtmElectionsCitizenGetEducation(MtmElections mtmElections, int citizenId, int* yearsOfEducation);
 //
