@@ -77,7 +77,11 @@ UniqueOrderedList uniqueOrderedListCopy(UniqueOrderedList list)
 {
     if (list == NULL)
         return NULL;
-    UniqueOrderedList new_list = uniqueOrderedListCreate(list->copyFunction, list-> freeFunction, list->equalsFunction, list->greaterThanFunction);
+    UniqueOrderedList new_list = uniqueOrderedListCreate
+            (list->copyFunction,
+             list-> freeFunction,
+             list->equalsFunction,
+             list->greaterThanFunction);
     UniqueOrderedList* new_list_head = new_list;
     UniqueOrderedList temp_list = list;
     while (temp_list != NULL)
@@ -144,7 +148,37 @@ bool uniqueOrderedListContains(UniqueOrderedList list, Element element)
  * 											 to the new element
  * UNIQUE_ORDERED_LIST_SUCCESS - in case of successful insertion.
  */
-UniqueOrderedListResult uniqueOrderedListInsert(UniqueOrderedList, Element);
+UniqueOrderedListResult uniqueOrderedListInsert(UniqueOrderedList list , Element element)
+{
+    if (list == NULL || element == NULL)
+        return UNIQUE_ORDERED_LIST_NULL_ARGUMENT;
+    UniqueOrderedList* head = list;
+    while ( list != NULL)
+    {
+        if (list->equalsFunction(list->data, element))
+            return UNIQUE_ORDERED_LIST_ITEM_ALREADY_EXISTS;
+        if (list->greaterThanFunction(element, list->data))
+        {
+            if (!list->greaterThanFunction(element, (list->next)->data) || (list->next) == NULL)
+            {
+                UniqueOrderedList new_element = uniqueOrderedListCreate
+                        (list->copyFunction,
+                         list->freeFunction,
+                         list->equalsFunction,
+                         list->greaterThanFunction);
+                new_element->data = element;
+                new_element->next = list->next;
+                list->next = new_element;
+                list = head;
+                free(head);
+                return UNIQUE_ORDERED_LIST_SUCCESS;
+            }
+        }
+        list = list->next;
+    }
+    list = head;
+    free(head);
+}
 
 /**
  * removes an element from the list if there is an element equals to it in the list.
@@ -157,7 +191,36 @@ UniqueOrderedListResult uniqueOrderedListInsert(UniqueOrderedList, Element);
  * 											 to the passed element
  * UNIQUE_ORDERED_LIST_SUCCESS - in case of successful removal.
  */
-UniqueOrderedListResult uniqueOrderedListRemove(UniqueOrderedList, Element);
+UniqueOrderedListResult uniqueOrderedListRemove(UniqueOrderedList list, Element element)
+{
+    if ( list == NULL || element == NULL)
+        return UNIQUE_ORDERED_LIST_NULL_ARGUMENT;
+    UniqueOrderedList head = list;
+    UniqueOrderedList* support_node = malloc(sizeof(*support_node));
+    if (list->equalsFunction(list->data, element))
+    {
+        list = list->next;
+        free(head);
+        return UNIQUE_ORDERED_LIST_SUCCESS;
+    }
+    while (list != NULL)
+    {
+        if (list->equalsFunction((list->next)->data, element))
+        {
+            support_node = list->next;
+            list->next = (list->next)->next;
+            free(support_node);
+            list = head;
+            free(head);
+            return UNIQUE_ORDERED_LIST_SUCCESS;
+        }
+        list = list->next;
+    }
+    list = head;
+    free(head);
+    free(support_node);
+    return UNIQUE_ORDERED_LIST_ITEM_DOES_NOT_EXIST;
+}
 
 /**
 * Sets the internal iterator to the first (lowest) element and retrieves it.
