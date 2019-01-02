@@ -7,13 +7,21 @@
 #include "uniqueOrderedList.h"
 
 
-typedef struct uniqueOrderedList_t{
+typedef struct elementList_t {
     Element data;
-    struct uniqueOrderedList_t* next;
+    struct elementList_t* next;
+};
+
+typedef struct uniqueOrderedList_t{
     copyElements copyFunction;
     freeElements freeFunction;
     elementsEquals equalsFunction;
     elementGreaterThan greaterThanFunction;
+
+    ElementList element_list;
+    int size;
+    ElementList* head;
+    int iterator;
 };
 
 /**
@@ -36,18 +44,23 @@ UniqueOrderedList uniqueOrderedListCreate(copyElements copyFunc, freeElements fr
     }
 
     UniqueOrderedList list = malloc(sizeof(*list));
-    if (list == NULL)
+    ElementList new_element_node = malloc(sizeof(*new_element_node));
+
+    if (list == NULL || new_element_node == NULL)
     {
+        free(list);
+        free(new_element_node);
         return NULL;
     }
-
     list->copyFunction = copyFunc;
     list->freeFunction = freeFunc;
     list->equalsFunction = equalsFunc;
     list->greaterThanFunction = greaterFunc;
-
+    list->element_list = new_element_node;
+    list->size = 1;
+    list->head = new_element_node;
+    list->iterator = 1;
     return list;
-
 }
 
 
@@ -55,10 +68,11 @@ void uniqueOrderedListDestroy(UniqueOrderedList list)
 {
     if (list == NULL) return;
 
-    for (Element head = list;  head != NULL ; head = uniqueOrderedListGetNext(head))
+    for (ElementList head = uniqueOrderedListGetLowest(list);  head != NULL ; head = uniqueOrderedListGetNext(head))
     {
-        freeElements(head);
+        list->freeFunction(head);
     }
+    free(list);
 }
 
 /**
@@ -77,21 +91,25 @@ UniqueOrderedList uniqueOrderedListCopy(UniqueOrderedList list)
 {
     if (list == NULL)
         return NULL;
+    list->element_list = uniqueOrderedListGetLowest(list);
     UniqueOrderedList new_list = uniqueOrderedListCreate
             (list->copyFunction,
              list-> freeFunction,
              list->equalsFunction,
              list->greaterThanFunction);
-    UniqueOrderedList* new_list_head = new_list;
-    UniqueOrderedList temp_list = list;
-    while (temp_list != NULL)
+    ElementList new_element = new_list->copyFunction(list->element_list->data);
+    new_list->head = new_element;
+    new_list->element_list = new_list->head;
+    new_list->size = 0;
+    while (list->element_list->next != NULL)
     {
-        new_list = temp_list;
-        new_list = new_list->next;
-        temp_list = temp_list->next;
+        list->element_list = uniqueOrderedListGetNext(list);
+        if (uniqueOrderedListInsert(new_list, list->element_list->data) == UNIQUE_ORDERED_LIST_SUCCESS)
+            continue;
+        else
+            return NULL;
     }
-    free(temp_list);
-    return new_list_head;
+    return new_list;
 }
 
 /**
@@ -102,17 +120,11 @@ UniqueOrderedList uniqueOrderedListCopy(UniqueOrderedList list)
 */
 int uniqueOrderedListSize(UniqueOrderedList list)
 {
-    if (list == NULL)
+    if (list == NULL || list->element_list == NULL)
         return -1;
-    int counter = 0;
-    UniqueOrderedList temp_list = list;
-    while (temp_list != NULL)
-    {
-        counter++;
-        temp_list = temp_list->next;
-    }
-    free(temp_list);
-    return counter;
+    list->element_list = uniqueOrderedListGetGreatest(list);
+    list->element_list = uniqueOrderedListGetLowest(list);
+    return list->size;
 }
 
 /**
@@ -127,14 +139,17 @@ bool uniqueOrderedListContains(UniqueOrderedList list, Element element)
 {
     if (list == NULL)
         return NULL;
-    UniqueOrderedList temp_list = list;
+    list->element_list = uniqueOrderedListGetLowest(list);
+    if (list->element_list == NULL)
+        return NULL;
     bool answer = false;
-    while (temp_list != NULL && !answer)
+    while (list->element_list != NULL && !answer)
     {
-        answer = list->equalsFunction(element, temp_list->data);
-        temp_list = temp_list->next;
+        answer = list->equalsFunction(element, list->element_list->data);
+        if (answer)
+            return answer;
+        list->element_list = uniqueOrderedListGetNext(list);
     }
-    free(temp_list);
     return answer;
 }
 
@@ -150,34 +165,34 @@ bool uniqueOrderedListContains(UniqueOrderedList list, Element element)
  */
 UniqueOrderedListResult uniqueOrderedListInsert(UniqueOrderedList list , Element element)
 {
-    if (list == NULL || element == NULL)
+    if (list == NULL || element == NULL || list->element_list == NULL)
         return UNIQUE_ORDERED_LIST_NULL_ARGUMENT;
-    UniqueOrderedList* head = list;
-    while ( list != NULL)
+    list->element_list = uniqueOrderedListGetLowest(list);
+    while ( list->element_list != NULL)
     {
-        if (list->equalsFunction(list->data, element))
+        if (uniqueOrderedListContains(list, element))
             return UNIQUE_ORDERED_LIST_ITEM_ALREADY_EXISTS;
-        if (list->greaterThanFunction(element, list->data))
+        if (list->greaterThanFunction(element, list->element_list->data))
         {
-            if (!list->greaterThanFunction(element, (list->next)->data) || (list->next) == NULL)
+            if (!list->greaterThanFunction(element, (list->element_list->next)->data) || (list->element_list->next) == NULL)
             {
-                UniqueOrderedList new_element = uniqueOrderedListCreate
-                        (list->copyFunction,
-                         list->freeFunction,
-                         list->equalsFunction,
-                         list->greaterThanFunction);
-                new_element->data = element;
-                new_element->next = list->next;
-                list->next = new_element;
-                list = head;
-                free(head);
+                ElementList temp_element = list->copyFunction(element);
+                temp_element->next = list->element_list->next->next;
+                list->element_list->next = temp_element;
+                list->size++;
                 return UNIQUE_ORDERED_LIST_SUCCESS;
             }
         }
-        list = list->next;
+        else if (list->element_list == list->head)
+        {
+            ElementList new_element = list->copyFunction(element);
+            new_element->next =list->head;
+            list->head = new_element;
+            list->element_list = new_element;
+            list->size++;
+        }
+        list->element_list = uniqueOrderedListGetNext(list);
     }
-    list = head;
-    free(head);
 }
 
 /**
@@ -195,30 +210,28 @@ UniqueOrderedListResult uniqueOrderedListRemove(UniqueOrderedList list, Element 
 {
     if ( list == NULL || element == NULL)
         return UNIQUE_ORDERED_LIST_NULL_ARGUMENT;
-    UniqueOrderedList head = list;
-    UniqueOrderedList* support_node = malloc(sizeof(*support_node));
-    if (list->equalsFunction(list->data, element))
+    list->element_list = uniqueOrderedListGetLowest(list);
+    if (list->equalsFunction(list->element_list->data, element))
     {
-        list = list->next;
-        free(head);
+        list->head = uniqueOrderedListGetNext(list);
+        list->freeFunction(list->element_list);
+        list->size--;
         return UNIQUE_ORDERED_LIST_SUCCESS;
     }
-    while (list != NULL)
+    ElementList* support_node = malloc(sizeof(*support_node));
+    while (list->element_list != NULL)
     {
-        if (list->equalsFunction((list->next)->data, element))
+        if (list->equalsFunction((list->element_list->next)->data, element))
         {
-            support_node = list->next;
-            list->next = (list->next)->next;
-            free(support_node);
-            list = head;
-            free(head);
+            support_node = list->element_list->next;
+            list->element_list->next = (list->element_list->next)->next;
+            list->freeFunction(support_node);
+            list->size--;
             return UNIQUE_ORDERED_LIST_SUCCESS;
         }
-        list = list->next;
+        list->element_list = uniqueOrderedListGetNext(list);
     }
-    list = head;
-    free(head);
-    free(support_node);
+    list->freeFunction(support_node);
     return UNIQUE_ORDERED_LIST_ITEM_DOES_NOT_EXIST;
 }
 
@@ -241,7 +254,13 @@ UniqueOrderedListResult uniqueOrderedListRemove(UniqueOrderedList list, Element 
 * NULL is a NULL pointer was sent or the list is empty.
 * The lowest element of the list otherwise
  */
-Element uniqueOrderedListGetLowest(UniqueOrderedList);
+Element uniqueOrderedListGetLowest(UniqueOrderedList list)
+{
+    if (list == NULL || list->element_list == NULL)
+        return NULL;
+    list->iterator = 1;
+    return list->head;
+}
 
 /**
 * Sets the internal iterator to the last (greatest) element and retrieves it.
@@ -256,7 +275,18 @@ Element uniqueOrderedListGetLowest(UniqueOrderedList);
 * NULL is a NULL pointer was sent or the list is empty.
 * The greatest element of the list otherwise
  */
-Element uniqueOrderedListGetGreatest(UniqueOrderedList);
+Element uniqueOrderedListGetGreatest(UniqueOrderedList list)
+{
+    if (list == NULL || list->element_list == NULL)
+        return NULL;
+    list->element_list = uniqueOrderedListGetLowest(list);
+    while (list->element_list->next != NULL)
+    {
+        list->element_list = uniqueOrderedListGetNext(list);
+    }
+    list->size = list->iterator;
+    return list->element_list;
+}
 
 /**
 * Advances the list's iterator to the next element and return it
@@ -268,10 +298,25 @@ Element uniqueOrderedListGetGreatest(UniqueOrderedList);
 */
 Element uniqueOrderedListGetNext(UniqueOrderedList list)
 {
-    return list->next;
+    if (list == NULL || list->element_list == NULL) return NULL;
+    if (list->element_list->next != NULL)
+    {
+        list->iterator++;
+        return list->element_list->next;
+    }
+    else return NULL;
 }
 
 /**
 * Removes all elements from target list.
 */
-void uniqueOrderedListClear(UniqueOrderedList);
+void uniqueOrderedListClear(UniqueOrderedList list)
+{
+    if (list == NULL || list->element_list == NULL)
+        return;
+    list->element_list = uniqueOrderedListGetLowest(list);
+    while (uniqueOrderedListRemove(list, list->element_list) == UNIQUE_ORDERED_LIST_SUCCESS)
+    {
+        continue;
+    }
+}

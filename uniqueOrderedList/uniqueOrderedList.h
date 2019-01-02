@@ -40,7 +40,7 @@
 *                                           and return it
 *   uniqueOrderedListClear		      	  - Clears all the data from the list
 */
-
+typedef struct elementList_t* ElementList;
 typedef struct uniqueOrderedList_t* UniqueOrderedList;
 
 /** Result type which is used for returning error values
