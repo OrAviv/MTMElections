@@ -6,6 +6,6 @@
 #include "candidate.h"
 
 struct candidate_t{
-    Citizen citizen;
-    int preference;
+    int id;
 };
+

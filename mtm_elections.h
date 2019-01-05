@@ -72,7 +72,9 @@ UniqueOrderedList mtmElectionsPerformElections(MtmElections mtmElections, RankFu
 
 MtmElectionsResult mtmElectionsMayorOfCity(MtmElections mtmElections, int cityId, int* mayor, const char* filename);
 
+MtmElectionsResult mtmElectionIsCitizenExist(MtmElections mtmElections, int citizedId);
 
+MtmElectionsResult mtmElectionIsCandidateExist(MtmElections mtmElections, int candidateId);
 
 
 #endif /* MTM_ELECTIONS_H_ */

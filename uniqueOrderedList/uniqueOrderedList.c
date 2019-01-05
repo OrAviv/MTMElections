@@ -36,7 +36,10 @@ typedef struct uniqueOrderedList_t{
 * 	NULL - if one of the parameters is NULL or allocations failed.
 * 	A new List in case of success.
 */
-UniqueOrderedList uniqueOrderedListCreate(copyElements copyFunc, freeElements freeFunc, elementsEquals equalsFunc, elementGreaterThan greaterFunc)
+UniqueOrderedList uniqueOrderedListCreate(copyElements copyFunc,
+                                          freeElements freeFunc,
+                                          elementsEquals equalsFunc,
+                                          elementGreaterThan greaterFunc)
 {
     if( !copyFunc || !freeFunc || !equalsFunc || !greaterFunc )
     {
