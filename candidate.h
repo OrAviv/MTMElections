@@ -6,13 +6,13 @@
 #define MTMELECTIONS_CANDIDATE_H
 
 #include "citizen.h"
-
+#include <stdlib.h>
 
 typedef struct candidate_t* Candidate;
 
-typedef Candidate CopyCandiate (Candidate candidate);
-typedef void freeCandidate (Candidate candidate);
-typedef bool candidatesEqual (Candidate first_candidate, Candidate second_candidate);
-typedef bool candidateGreaterThan (Candidate first_candidate, Candidate second_candidate);
+Element copyCandidate (Element candidate);
+void freeCandidate (Element candidate);
+bool candidatesEqual(Element first_candidate, Element second_candidate);
+bool candiateGratearThan (Element first_candidate, Element second_candidate);
 
 #endif //MTMELECTIONS_CANDIDATE_H

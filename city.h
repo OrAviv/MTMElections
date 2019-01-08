@@ -8,14 +8,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "uniqueOrderedList/uniqueOrderedList.h"
+#include "libmtm/set.h"
 
 typedef struct city_t* City;
 
-Element copyCity(Element city);
-void freeCity (Element city);
-bool citysEqual (Element first_city, Element second_city);
-bool cityGreaterThan (Element first_city, Element second_city);
-
+City copyCity (ElementList city);
+void freeCity (ElementList city);
+bool equlCities(ElementList first_city, ElementList second_city);
 
 
 #endif //MTMELECTIONS_CITY_H

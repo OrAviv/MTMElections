@@ -22,10 +22,12 @@ Element copyCitizen (Element citizen)
     if(citizen == NULL)
         return NULL;
 
-    Citizen* new_citizen = malloc(sizeof(*new_citizen));
+    Citizen new_citizen = malloc(sizeof(*new_citizen));
     if (new_citizen == NULL)
         return NULL;
-    *new_citizen = *(Citizen*)citizen;
+    new_citizen = *(Citizen*)citizen;
+    UniqueOrderedList* new_candidates_list = malloc(sizeof(*new_candidates_list));
+    new_citizen->candidates = new_candidates_list;
     return new_citizen;
 }
 
@@ -50,6 +52,8 @@ bool citizensEqual (Element first_citizen, Element second_citizen)
                     freeCitizen(s_citizen);
                     return true;
                 }
+    free(f_citizen);
+    free(s_citizen);
     return false;
 }
 bool citizenGreaterThan (Element first_citizen, Element second_citizen)

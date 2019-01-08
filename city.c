@@ -15,55 +15,7 @@ struct city_t{
   UniqueOrderedList citizens;
 };
 
-Element copyCity(Element city)
-{
-    if (city == NULL)
-        return NULL;
 
-    City new_city = malloc(sizeof(*city));
-    if (new_city == NULL)
-        return NULL;
-
-    new_city = *(City*)city;
-    return new_city;
-}
-void freeCity (Element city)
-{
-    free(city);
-}
-bool citysEqual (Element first_city, Element second_city)
-{
-    if (first_city == NULL || second_city == NULL)
-        return NULL;
-
-    City f_city = copyCity(first_city);
-    City s_city = copyCity(second_city);
-
-    if (uniqueOrderedListSize(f_city->citizens) == uniqueOrderedListSize(s_city->citizens))
-    {
-        freeCity(f_city);
-        freeCity(s_city);
-        return true;
-    }
-
-    freeCity(f_city);
-    freeCity(s_city);
-    return false;
-}
-bool cityGreaterThan (Element first_city, Element second_city)
-{
-    if (first_city == NULL || second_city == NULL)
-        return NULL;
-    if (citysEqual(first_city,second_city))
-        return false;
-
-    City f_city = copyCity(first_city);
-    City s_city = copyCity(second_city);
-
-    if (uniqueOrderedListSize(f_city->citizens) == uniqueOrderedListSize(s_city->citizens))
-    {
-        freeCity(f_city);
-        freeCity(s_city);
-        return true;
-    }
-}
+City copyCity (ElementList city);
+void freeCity (ElementList city);
+bool equlCities(ElementList first_city, ElementList second_city);
